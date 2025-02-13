@@ -73,7 +73,32 @@
         Queue worker:<br />
         <span id="q0l-queue-worker">...</span><br />
         <br />
-       
+        <!-- --------------------------------------------------------- -->
+        <h3><b>Dev online health:</b></h3>
+        Web performance:<br />
+        <span id="dv1-web-perf">...</span><br />
+        <br />
+        Web server's health:<br />
+        <span id="dv1-web-health">...</span><br />
+        <br />
+        SQL server's health:<br />
+        <span id="dv1-sql-health">...</span><br />
+        <br />
+        Logs:<br />
+        <span id="dv1-logs">...</span><br />
+        <br />
+        .NET Counter:<br />
+        <span id="dv1-net-counter">...</span><br />
+        <br />
+        Parameter build:<br />
+        <span id="dv1-param-build">...</span><br />
+        <br />
+        Session used:<br />
+        <span id="dv1-session-bulkload-check">...</span><br />
+        <br />
+        Queue worker:<br />
+        <span id="dv1-queue-worker">...</span><br />
+        <br />
     </div>
     <script>
         function formatDateToLocalISOString(date) {
@@ -155,10 +180,43 @@
             document.getElementById('q0l-queue-worker').textContent = queueWorkerLink;
         }
 
+        function dv1Apply() {
+            before = new Date(document.getElementById('start').value).getTime();
+            after = new Date(document.getElementById('end').value).getTime();
+            // Define the URL templates : from=[before]&to=[after]
+            const webPerf = "https://grafana.orangelogic.systems/d/1ex6hrN7k/cortex-web-performance-monitoring?from=[before]&to=[after]&var-base_url=https:%2F%2Fdevonline01.orangelogic.com&var-cortex_request_type=All&var-host=All&var-sliding_window=30m&var-ol_cortex_tenant_location=DV1&var-cortex_request_type_combined=All&var-ol_cortex_base_url_clean=https:%2F%2Fdevonline01.orangelogic.com&var-target=All";
+            const sqlHealth = "https://grafana.orangelogic.systems/d/Kdh0OoSGz2/windows-hosts-detailed-view?orgId=1&var-datasource=Thanos%20Prod%20Cluster&var-job=windows-exporter&var-hostname=All&var-instance=dev-usw2-d-cmb&var-show_hostname=DEV-USW2-D-CMB&from=[before]&to=[after]";
+            const webHealth = "https://grafana.orangelogic.systems/d/Kdh0OoSGz2/windows-hosts-detailed-view?orgId=1&var-datasource=Thanos%20Prod%20Cluster&var-job=windows-exporter&var-hostname=All&var-instance=dev-ape1-d-app&var-show_hostname=DEV-APE1-D-APP&from=[before]&to=[after]";
+            const logs = "https://grafana.orangelogic.systems/explore?left=%7B%22datasource%22:%22Gjc80XrGz%22,%22queries%22:%5B%7B%22datasource%22:%7B%22type%22:%22loki%22,%22uid%22:%22Gjc80XrGz%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22%7Bcortex_location%3D~%5C%22DV1%5C%22,app%3D%5C%22Cortex%5C%22,severity%3D~%5C%22Critical%7CError%5C%22,cortex_service%3D%5C%22Web%5C%22%7D%20%7C%20json%20%7C%20line_format%20%5C%22%5B%7B%7B%20.level%20%7D%7D%5D%20%7B%7B%20.body%20%7D%7D%5C%22%22,%22queryType%22:%22range%22,%22refId%22:%22A%22%7D%5D,%22range%22:%7B%22from%22:%22[before]%22,%22to%22:%22[after]%22%7D%7D&orgId=1";
+            const netCounter = "https://grafana.orangelogic.systems/d/ffa1859f-33a6-48e8-be11-d3c3067386ac/net-performance-counters?orgId=1&var-location=DV1&var-process_type=Web&var-process_name=Cortex&var-host_name=All&var-process_id=All&from=[before]&to=[after]";
+            const paramBuild = "https://grafana.orangelogic.systems/d/mbBOGLD7k/cortex-parameter-manager-monitoring-v1?orgId=1&var-host=All&var-ol_cortex_app_name=All&var-process_name=All&var-sliding_window=1m&var-URL=https:%2F%2Fdevonline01.orangelogic.com&from=[before]&to=[after]";
+            const sessionBulkLoadCheck = "https://grafana.orangelogic.systems/explore?left=%7B%22datasource%22:%22Gjc80XrGz%22,%22queries%22:%5B%7B%22datasource%22:%7B%22type%22:%22loki%22,%22uid%22:%22Gjc80XrGz%22%7D,%22editorMode%22:%22code%22,%22expr%22:%22%7Bapp%3D%5C%22Cortex%5C%22,ol_customer%3D~%5C%22COR%5C%22,cortex_location%3D~%5C%22DV1%5C%22,environment%3D~%5C%22Test%5C%22,severity%3D~%5C%22Information%5C%22,cortex_service%3D~%5C%22Web%5C%22%7D%20%7C~%20%5C%22%28%3Fi%29Started%20bulk%20loading%20parameter%20for%20context%5C%22%20%21~%20%5C%22%28%3Fi%29Type%20excluded%20regex%20here%5C%22%20%7C%20json%20%7C%20line_format%20%5C%22%7B%7B%20.cortex_location%20%7D%7D%20%5B%7B%7B%20.attributes_ol_cortex_log_level%20%7D%7D%5D%20%7B%7B%20.body%20%7D%7D%5C%22%22,%22maxLines%22:500,%22queryType%22:%22range%22,%22refId%22:%22A%22%7D%5D,%22range%22:%7B%22from%22:%22[before]%22,%22to%22:%22[after]%22%7D%7D&orgId=1";
+            const queueWorker = "https://grafana.orangelogic.systems/d/G3uR-2O7k/cortex-queue-monitoring-workers?orgId=1&refresh=10s&var-ol_cortex_base_url=https:%2F%2Fdevonline01.orangelogic.com&var-sliding_window=10m&var-aws_ecs_task_family=&var-queue_label=All&var-ol_cortex_tenant_location=DV1&from=[before]&to=[after]";
+
+            const webPerfLink = webPerf.replace('[before]', before).replace('[after]', after);
+            const webHealthLink = webHealth.replace('[before]', before).replace('[after]', after);
+            const sqlHealthLink = sqlHealth.replace('[before]', before).replace('[after]', after);
+            const logLink = logs.replace('[before]', before).replace('[after]', after);
+            const netCounterLink = netCounter.replace('[before]', before).replace('[after]', after);
+            const paramBuildLink = paramBuild.replace('[before]', before).replace('[after]', after);
+            const sessionBulkLoadCheckLink = sessionBulkLoadCheck.replace('[before]', before).replace('[after]', after);
+            const queueWorkerLink = queueWorker.replace('[before]', before).replace('[after]', after);
+
+            // Display the links in the HTML
+            document.getElementById('dv1-web-perf').textContent = webPerfLink;
+            document.getElementById('dv1-web-health').textContent = webHealthLink;
+            document.getElementById('dv1-sql-health').textContent = sqlHealthLink;
+            document.getElementById('dv1-logs').textContent = logLink;
+            document.getElementById('dv1-net-counter').textContent = netCounterLink;
+            document.getElementById('dv1-param-build').textContent = paramBuildLink;
+            document.getElementById('dv1-session-bulkload-check').textContent = sessionBulkLoadCheckLink;
+            document.getElementById('dv1-queue-worker').textContent = queueWorkerLink;
+        }
+
         function apply() {
             tm7Apply();
             q0lApply();
-            devOnlineApply();
+            dv1Apply();
         }
     </script>
 </body>
