@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Tools</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+        button, select {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>String Tools</h1>
+    <textarea id="input" placeholder="Enter your text here..."></textarea>
+    <br>
+    <button onclick="escapeString()">Escape String</button>
+    <button onclick="unescapeString()">Unescape String</button>
+    <button onclick="formatJSON()">Format JSON</button>
+    <button onclick="formatXML()">Format XML</button>
+    <select id="mode">
+        <option value="escape">Escape Mode</option>
+        <option value="unescape">Unescape Mode</option>
+    </select>
+    <h3>Output:</h3>
+    <textarea id="output" readonly></textarea>
+
+    <script>
+        function escapeString() {
+            const input = document.getElementById('input').value;
+            const escaped = input
+                .replace(/\\/g, '\\\\')
+                .replace(/\n/g, '\\n')
+                .replace(/\t/g, '\\t')
+                .replace(/"/g, '\\"')
+                .replace(/'/g, "\\'");
+            document.getElementById('output').value = escaped;
+        }
+
+        function unescapeString() {
+            const input = document.getElementById('input').value;
+            const unescaped = input
+                .replace(/\\n/g, '\n')
+                .replace(/\\t/g, '\t')
+                .replace(/\\"/g, '"')
+                .replace(/\\'/g, "'")
+                .replace(/\\\\/g, '\\');
+            document.getElementById('output').value = unescaped;
+        }
+
+        function formatJSON() {
+            const mode = document.getElementById('mode').value;
+            const input = document.getElementById('input').value;
+            try {
+                const parsed = JSON.parse(input);
+                let formatted = JSON.stringify(parsed, null, 4);
+                if (mode === 'escape') {
+                    formatted = formatted.replace(/\\/g, '\\\\')
+                        .replace(/\n/g, '\\n')
+                        .replace(/\t/g, '\\t')
+                        .replace(/"/g, '\\"');
+                } else if (mode === 'unescape') {
+                    formatted = formatted.replace(/\\n/g, '\n')
+                        .replace(/\\t/g, '\t')
+                        .replace(/\\"/g, '"')
+                        .replace(/\\\\/g, '\\');
+                }
+                document.getElementById('output').value = formatted;
+            } catch (error) {
+                alert('Invalid JSON input!');
+            }
+        }
+
+        function formatXML() {
+            const mode = document.getElementById('mode').value;
+            const input = document.getElementById('input').value;
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(input, "application/xml");
+                const serializer = new XMLSerializer();
+                let formatted = serializer.serializeToString(xmlDoc);
+                const formattedIndented = formatted
+                    .replace(/(>)(<)(\/*)/g, '$1\n$2$3')
+                    .replace(/(<.+?>)(.+?)(<\/.+?>)/g, '$1\n    $2\n$3');
+                if (mode === 'escape') {
+                    formatted = formattedIndented
+                        .replace(/\\/g, '\\\\')
+                        .replace(/\n/g, '\\n')
+                        .replace(/\t/g, '\\t')
+                        .replace(/"/g, '\\"');
+                } else if (mode === 'unescape') {
+                    formatted = formattedIndented
+                        .replace(/\\n/g, '\n')
+                        .replace(/\\t/g, '\t')
+                        .replace(/\\"/g, '"')
+                        .replace(/\\\\/g, '\\');
+                }
+                document.getElementById('output').value = formatted;
+            } catch (error) {
+                alert('Invalid XML input!');
+            }
+        }
+    </script>
+</body>
+</html>
