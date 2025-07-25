@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log Link Generator</title>
+    <style>
+        div { word-wrap: break-word; }
+        label, input { margin: 0.2em 0.5em 0.2em 0; }
+        a { display: block; margin-bottom: 1em; }
+    </style>
+</head>
+<body>
+<div>
+    <label for="location"><b>Location:</b></label>
+    <input type="text" id="location" value="TM7" style="width:60px;">
+    <label for="start"><b>Start Date:</b></label>
+    <input type="datetime-local" id="start">
+    <label for="end"><b>End Date:</b></label>
+    <input type="datetime-local" id="end">
+    <button onclick="apply()"><b>Apply</b></button>
+    <br><br>
+    <b>Bulk load for new context (will indicate a new parameter context is used):</b><br>
+    <a id="bulk-load-link" href="#" target="_blank"></a>
+    <br>
+    <b>1 Million fields logs:</b><br>
+    <a id="million-fields-link" href="#" target="_blank"></a>
+    <br>
+    <b>Request rates:</b><br>
+    <a id="request-rates-link" href="#" target="_blank"></a>
+    <br>
+</div>
+
+<script>
+function formatDateToLocalISOString(date) {
+    var datee = new Date(date)
+    const offset = datee.getTimezoneOffset() * 60000;
+    return new Date(datee - offset).toISOString().slice(0, 19);
+}
+
+// Set default timerange: now and 3 hours ago
+const now = Date.now();
+const threeHoursAgo = now - (3 * 60 * 60 * 1000);
+document.getElementById('start').value = formatDateToLocalISOString(threeHoursAgo);
+document.getElementById('end').value = formatDateToLocalISOString(now);
+
+function apply() {
+    const loc = encodeURIComponent(document.getElementById('location').value);
+    const from = new Date(document.getElementById('start').value).toISOString();
+    const to = new Date(document.getElementById('end').value).toISOString();
+
+    // Generate all links
+    const bulkLoadUrl = `https://grafana.orangelogic.systems/explore?left=${encodeURIComponent(JSON.stringify({
+        datasource: { type: "loki", uid: "Gjc80XrGz" },
+        queries: [{
+            datasource: { type: "loki", uid: "Gjc80XrGz" },
+            editorMode: "code",
+            expr: `{app="Cortex",cortex_location=~"${loc}",severity=~"Information",cortex_service="Web"} |~ "(?i)Started bulk loading parameter for context" !~ "(?i)Type excluded regex here" | json | line_format "{{ .cortex_location }} [{{ .attributes_ol_cortex_log_level }}] {{ .body }}"`,
+            maxLines: 500,
+            queryType: "range",
+            refId: "A"
+        }],
+        range: { from, to }
+    }))}&orgId=1`;
+
+    const millionFieldsUrl = `https://grafana.orangelogic.systems/explore?left=${encodeURIComponent(JSON.stringify({
+        datasource: { type: "loki", uid: "Gjc80XrGz" },
+        queries: [{
+            datasource: { type: "loki", uid: "Gjc80XrGz" },
+            editorMode: "code",
+            expr: `{app="Cortex",cortex_location=~"${loc}",severity=~"Information",cortex_service="Web"} |~ "(?i)" !~ "(?i)Type excluded regex here" | json | attributes_ol_cortex_log_function_name=\`IncreaseFieldCount\` | line_format "{{ .cortex_location }} [{{ .attributes_ol_cortex_log_level }}] {{ .body }}"`,
+            maxLines: 500,
+            queryType: "range",
+            refId: "A"
+        }],
+        range: { from, to }
+    }))}&orgId=1`;
+
+    const requestRatesUrl = `https://grafana.orangelogic.systems/explore?left=${encodeURIComponent(JSON.stringify({
+        datasource: { type: "loki", uid: "Gjc80XrGz" },
+        queries: [{
+            datasource: { type: "loki", uid: "Gjc80XrGz" },
+            editorMode: "code",
+            expr: `{app="Cortex",cortex_location=~"${loc}",severity=~"Information",cortex_service="Web"} |~ "(?i)" !~ "(?i)Type excluded regex here" | json | attributes_ol_cortex_log_function_name=\`LogTransactionTypeCategorization\` | line_format "{{ .cortex_location }} [{{ .attributes_ol_cortex_log_level }}] {{ .body }}"`,
+            maxLines: 1,
+            queryType: "range",
+            refId: "A"
+        }],
+        range: { from, to }
+    }))}&orgId=1`;
+
+    // Update links' href and text
+    document.getElementById('bulk-load-link').href = bulkLoadUrl;
+    document.getElementById('bulk-load-link').textContent = bulkLoadUrl;
+
+    document.getElementById('million-fields-link').href = millionFieldsUrl;
+    document.getElementById('million-fields-link').textContent = millionFieldsUrl;
+
+    document.getElementById('request-rates-link').href = requestRatesUrl;
+    document.getElementById('request-rates-link').textContent = requestRatesUrl;
+}
+
+// Run once on load
+apply();
+</script>
+</body>
+</html>
