@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONL Tag Remover</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 150px; margin-top: 10px; }
+        button { margin-top: 10px; }
+        #output { white-space: pre-wrap; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>JSONL Tag Remover</h2>
+    
+    <label for="fileInput">Upload JSONL File:</label>
+    <input type="file" id="fileInput" accept=".jsonl" onchange="processFile()">
+    
+    <label for="fieldsToRemove">Fields to Remove (one per line):</label>
+    <textarea id="fieldsToRemove" placeholder="e.g., Envato.Author-Tags++&#10;Envato.Legacy-Colors++"></textarea>
+    
+    <button onclick="downloadResult()">Download Modified JSONL</button>
+    
+    <h3>Processed Output:</h3>
+    <div id="output"></div>
+
+    <script>
+        let processedLines = [];
+
+        function processFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please upload a file!");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const content = event.target.result;
+                const lines = content.split('\n').filter(line => line.trim() !== '');
+                const fieldsToRemove = document.getElementById('fieldsToRemove')
+                    .value
+                    .split('\n')
+                    .map(field => field.trim())
+                    .filter(field => field !== '');
+
+                processedLines = lines.map(line => {
+                    try {
+                        let jsonObj = JSON.parse(line);
+                        fieldsToRemove.forEach(field => {
+                            delete jsonObj[field];
+                        });
+                        return JSON.stringify(jsonObj);
+                    } catch (e) {
+                        console.error("Error parsing line:", line, e);
+                        return line; // Keep original line if parsing fails
+                    }
+                });
+
+                document.getElementById('output').textContent = processedLines.join('\n');
+            };
+            reader.readAsText(file);
+        }
+
+        function downloadResult() {
+            if (processedLines.length === 0) {
+                alert("Process a file first!");
+                return;
+            }
+
+            const blob = new Blob([processedLines.join('\n')], { type: 'text/jsonl' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'modified.jsonl';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
